@@ -82,22 +82,6 @@
         .status-out { background: #fefcbf; color: #975a16; }
         .salary-highlight { color: var(--gold-dark); font-weight: bold; }
 
-        .theme-toggle {
-            position: fixed;
-            top: 10px;
-            right: 10px;
-            width: auto;
-            padding: 8px 12px;
-            font-size: 18px;
-            border-radius: 50%;
-            border: 2px solid var(--gold);
-            background: var(--card);
-            color: var(--text);
-            cursor: pointer;
-            z-index: 1000;
-            box-shadow: 0 2px 8px var(--shadow);
-        }
-
         .export-panel {
             background: var(--card);
             border: 2px solid #805ad5;
@@ -276,7 +260,7 @@
         .btn-google:hover { opacity: 0.9; }
         .btn-google:disabled { opacity: 0.5; cursor: not-allowed; }
 
-        /* ===== 頂部用戶資訊 ===== */
+        /* ===== 頂部用戶資訊列（已整合主題切換按鈕） ===== */
         .user-bar {
             display: flex;
             align-items: center;
@@ -287,6 +271,7 @@
             margin-bottom: 12px;
             box-shadow: 0 2px 8px var(--shadow);
             font-size: 12px;
+            gap: 8px;
         }
         .user-bar .user-info {
             display: flex;
@@ -294,17 +279,25 @@
             gap: 8px;
             color: var(--text-label);
             overflow: hidden;
+            flex: 1;
+            min-width: 0;
         }
         .user-bar .user-info img {
             width: 24px;
             height: 24px;
             border-radius: 50%;
+            flex-shrink: 0;
         }
         .user-bar .user-info span {
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            max-width: 180px;
+        }
+        .user-bar .user-actions {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-shrink: 0;
         }
         .btn-logout {
             background: transparent;
@@ -316,15 +309,35 @@
             cursor: pointer;
             width: auto;
             margin: 0;
+            white-space: nowrap;
         }
         .btn-logout:hover {
             background: var(--border-light);
         }
+        /* 主題切換按鈕（已移入用戶資訊列） */
+        .theme-toggle-inline {
+            width: 32px;
+            height: 32px;
+            padding: 0;
+            margin: 0;
+            font-size: 15px;
+            border-radius: 50%;
+            border: 2px solid var(--gold);
+            background: var(--card);
+            color: var(--text);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: transform 0.2s;
+        }
+        .theme-toggle-inline:hover {
+            transform: scale(1.1);
+        }
     </style>
 </head>
 <body>
-
-<button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="切換深色/淺色" aria-label="切換主題">🌙</button>
 
 <div id="toast"></div>
 
@@ -356,13 +369,16 @@
 <!-- ===== 主應用程式 ===== -->
 <div id="appContainer" style="display:none;">
 
-    <!-- 用戶資訊列 -->
+    <!-- 用戶資訊列（已整合主題切換按鈕） -->
     <div class="user-bar" id="userBar" style="display:none;">
         <div class="user-info">
             <img id="userAvatar" src="" alt="">
             <span id="userName"></span>
         </div>
-        <button class="btn-logout" id="btnLogout">登出</button>
+        <div class="user-actions">
+            <button class="theme-toggle-inline" id="themeToggle" onclick="toggleTheme()" title="切換深色/淺色" aria-label="切換主題">🌙</button>
+            <button class="btn-logout" id="btnLogout">登出</button>
+        </div>
     </div>
 
     <h2>浚鍵管理有限公司<br><small>司機報更出勤表</small></h2>
@@ -702,11 +718,9 @@
 
     // ===== 登入成功處理 =====
     function onLoginSuccess(user) {
-        // 顯示 App，隱藏登入畫面
         document.getElementById('loginContainer').style.display = 'none';
         document.getElementById('appContainer').style.display = 'block';
 
-        // 顯示用戶資訊
         const userBar = document.getElementById('userBar');
         userBar.style.display = 'flex';
         document.getElementById('userName').textContent = user.displayName || user.email || '已登入用戶';
@@ -718,7 +732,6 @@
             avatar.style.display = 'none';
         }
 
-        // 只初始化一次 App 邏輯
         if (!appInitialized) {
             appInitialized = true;
             initApp();
@@ -727,15 +740,12 @@
 
     // ===== 登出處理 =====
     function onLogout() {
-        // 隱藏 App，顯示登入畫面
         document.getElementById('appContainer').style.display = 'none';
         document.getElementById('loginContainer').style.display = 'flex';
 
-        // 重設登入按鈕
         const btnLogin = document.getElementById('btnGoogleLogin');
         if (btnLogin) btnLogin.disabled = false;
 
-        // 清理監聽器
         if (activeListener && activeListenerDate) {
             try {
                 db.ref('attendance/' + activeListenerDate).off('value', activeListener);
@@ -744,7 +754,6 @@
             activeListenerDate = "";
         }
 
-        // 重設狀態
         appInitialized = false;
         currentDayData = {};
         allDrivers.clear();
@@ -758,7 +767,6 @@
 
         document.getElementById('attendanceDate').value = todayStr;
 
-        // 初始化年份選擇器
         const yearSelect = document.getElementById('searchYear');
         yearSelect.innerHTML = '';
         const currentYear = today.getFullYear();
@@ -770,14 +778,11 @@
             yearSelect.appendChild(opt);
         }
 
-        // 初始化月份選擇器
         document.getElementById('searchMonthSel').value = String(today.getMonth() + 1).padStart(2, '0');
 
-        // 初始化自定日期
         document.getElementById('customStartDate').value = todayStr;
         document.getElementById('customEndDate').value = todayStr;
 
-        // 載入上次匯出選擇
         const lastRange = safeGet('lastExportRange');
         if (lastRange) setExportRange(lastRange);
 
@@ -788,11 +793,9 @@
             console.log('✅ 已自動填入司機姓名:', savedName);
         }
 
-        // 啟動數據監聽
         switchDate();
         loadAllDrivers();
 
-        // 監聽連線狀態
         db.ref('.info/connected').on('value', (snap) => {
             const status = snap.val() ? '☁️ 雲端狀態：已成功連線' : '☁️ 雲端狀態：離線';
             const el = document.getElementById('cloudStatus');
@@ -887,7 +890,6 @@
         db.ref('attendance/' + currentDate + '/' + key).set(record)
             .then(() => {
                 showToast('✅ 報到成功！', 'success');
-                // ✅ 選項 A：記住姓名，但唔清空輸入框
                 saveDriverName(driverName);
                 allDrivers.add(driverName);
                 updateDriverDatalist();
@@ -931,7 +933,6 @@
         db.ref('attendance/' + currentDate + '/' + key).update({ checkOut: timeStr, hours, salary })
             .then(() => {
                 showToast('✅ 簽退成功！工時 ' + hours + 'h，人工 HK$' + salary.toFixed(2), 'success');
-                // ✅ 選項 A：記住姓名
                 saveDriverName(record.driverName);
             })
             .catch((err) => {
