@@ -215,7 +215,6 @@
             margin-top: 6px;
         }
 
-        /* ===== 登入畫面 ===== */
         #loginContainer {
             display: flex;
             flex-direction: column;
@@ -260,7 +259,6 @@
         .btn-google:hover { opacity: 0.9; }
         .btn-google:disabled { opacity: 0.5; cursor: not-allowed; }
 
-        /* ===== 頂部用戶資訊列（已整合主題切換按鈕） ===== */
         .user-bar {
             display: flex;
             align-items: center;
@@ -314,7 +312,6 @@
         .btn-logout:hover {
             background: var(--border-light);
         }
-        /* 主題切換按鈕（已移入用戶資訊列） */
         .theme-toggle-inline {
             width: 32px;
             height: 32px;
@@ -346,7 +343,6 @@
     <span>處理中…</span>
 </div>
 
-<!-- ===== 登入畫面 ===== -->
 <div id="loginContainer">
     <div class="login-card">
         <h2>浚鍵管理有限公司</h2>
@@ -366,10 +362,8 @@
     </div>
 </div>
 
-<!-- ===== 主應用程式 ===== -->
 <div id="appContainer" style="display:none;">
 
-    <!-- 用戶資訊列（已整合主題切換按鈕） -->
     <div class="user-bar" id="userBar" style="display:none;">
         <div class="user-info">
             <img id="userAvatar" src="" alt="">
@@ -384,7 +378,6 @@
     <h2>浚鍵管理有限公司<br><small>司機報更出勤表</small></h2>
     <div class="cloud-status" id="cloudStatus">☁️ 雲端狀態：連線中...</div>
 
-    <!-- 編輯 Modal -->
     <div class="modal-overlay" id="editModal">
         <div class="modal">
             <h3>✏️ 修改出勤記錄</h3>
@@ -551,7 +544,6 @@
 </div><!-- /appContainer -->
 
 <script>
-    // ===== Firebase 設定（driver-s-shift-report 專案） =====
     const firebaseConfig = {
         apiKey: "AIzaSyANWLqV5bIFfMX_-byunnEBQ-gZmSn1cj4",
         authDomain: "driver-s-shift-report.firebaseapp.com",
@@ -584,7 +576,6 @@
     let exportRange = 'month';
     let allDrivers = new Set();
 
-    // ----- 安全 localStorage -----
     function safeGet(key) {
         try { return localStorage.getItem(key); } catch (e) { return null; }
     }
@@ -592,7 +583,6 @@
         try { localStorage.setItem(key, value); } catch (e) { /* 忽略 */ }
     }
 
-    // ----- 記住司機姓名（選項 A） -----
     function getSavedDriverName() {
         return safeGet('lastDriverName') || '';
     }
@@ -609,7 +599,6 @@
         showToast('🧹 已清除記憶姓名', 'success');
     }
 
-    // ----- 工具函數 -----
     function escapeHtml(str) {
         if (str === null || str === undefined) return '';
         return String(str)
@@ -648,7 +637,6 @@
         return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
     }
 
-    // ----- 主題 -----
     function applyTheme(theme) {
         document.documentElement.setAttribute('data-theme', theme);
         const btn = document.getElementById('themeToggle');
@@ -666,7 +654,6 @@
         applyTheme(saved);
     }
 
-    // ===== 初始化（主題 + 登入監聽） =====
     window.onload = function() {
         initTheme();
 
@@ -677,7 +664,6 @@
             return;
         }
 
-        // 綁定 Google 登入按鈕
         const btnLogin = document.getElementById('btnGoogleLogin');
         const provider = new firebase.auth.GoogleAuthProvider();
 
@@ -690,7 +676,6 @@
             });
         });
 
-        // 登出按鈕
         document.getElementById('btnLogout').addEventListener('click', function() {
             if (confirm('確定要登出嗎？')) {
                 auth.signOut().catch(function(error) {
@@ -699,7 +684,6 @@
             }
         });
 
-        // 監聽登入狀態
         auth.onAuthStateChanged(function(user) {
             if (user) {
                 currentUser = user;
@@ -710,13 +694,11 @@
             }
         });
 
-        // ESC 關閉 Modal
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') closeEditModal();
         });
     };
 
-    // ===== 登入成功處理 =====
     function onLoginSuccess(user) {
         document.getElementById('loginContainer').style.display = 'none';
         document.getElementById('appContainer').style.display = 'block';
@@ -738,7 +720,6 @@
         }
     }
 
-    // ===== 登出處理 =====
     function onLogout() {
         document.getElementById('appContainer').style.display = 'none';
         document.getElementById('loginContainer').style.display = 'flex';
@@ -760,7 +741,6 @@
         updateDriverDatalist();
     }
 
-    // ===== 初始化 App（只在登入後執行一次） =====
     function initApp() {
         const today = new Date();
         const todayStr = formatLocalDate(today);
@@ -786,7 +766,6 @@
         const lastRange = safeGet('lastExportRange');
         if (lastRange) setExportRange(lastRange);
 
-        // ✅ 選項 A：自動填入上次使用嘅司機姓名
         const savedName = getSavedDriverName();
         if (savedName) {
             document.getElementById('driverName').value = savedName;
@@ -803,7 +782,6 @@
         });
     }
 
-    // ----- 載入所有司機姓名（用於 datalist） -----
     function loadAllDrivers(showFeedback) {
         if (!db || !currentUser) return;
         db.ref('attendance').once('value').then(snap => {
@@ -973,7 +951,6 @@
             });
     }
 
-    // ----- 編輯記錄 -----
     let editingKey = null;
 
     function openEditModal(key) {
@@ -1083,7 +1060,6 @@
             `<strong>今日總出勤：${totalPeople} 人次 | 總工時：${totalHours.toFixed(1)} 小時 | 總人工：HK$${totalSalary.toFixed(2)}</strong>`;
     }
 
-    // ----- 月度統計 -----
     function getSelectedMonth() {
         const year = document.getElementById('searchYear').value;
         const month = document.getElementById('searchMonthSel').value;
@@ -1162,7 +1138,6 @@
             });
     }
 
-    // ----- 匯出範圍選擇 -----
     function setExportRange(range) {
         exportRange = range;
         safeSet('lastExportRange', range);
@@ -1375,8 +1350,27 @@
             const wb = new ExcelJS.Workbook();
             wb.creator = '浚鍵管理有限公司';
 
+            // ===== Sheet 1：封面摘要（A4 直向） =====
             const ws1 = wb.addWorksheet('封面摘要');
             ws1.columns = [{ width: 20 }, { width: 20 }, { width: 20 }, { width: 20 }, { width: 20 }, { width: 20 }, { width: 20 }];
+
+            // 設定 A4 直向列印
+            ws1.pageSetup = {
+                paperSize: 9,           // 9 = A4
+                orientation: 'portrait',
+                fitToPage: true,
+                fitToWidth: 1,
+                fitToHeight: 0,
+                margins: {
+                    left: 0.5, right: 0.5, top: 0.6, bottom: 0.6, header: 0.3, footer: 0.3
+                }
+            };
+
+            // 頁首頁尾
+            ws1.headerFooter = {
+                oddHeader: '&C&"Microsoft JhengHei,Bold"&14浚鍵管理有限公司 - 司機出勤報表',
+                oddFooter: '&L列印日期：&D &T&C第 &P 頁 / 共 &N 頁&R統計範圍：' + range.start + ' 至 ' + range.end
+            };
 
             ws1.mergeCells('A1:G1');
             const titleCell = ws1.getCell('A1');
@@ -1463,6 +1457,7 @@
                 rowIdx++;
             });
 
+            // ===== Sheet 2：出勤明細（A4 橫向） =====
             const ws2 = wb.addWorksheet('出勤明細');
             ws2.columns = [
                 { header: '日期', key: 'date', width: 14 },
@@ -1473,6 +1468,24 @@
                 { header: '時數 (h)', key: 'hours', width: 12 },
                 { header: '人工 (HKD)', key: 'salary', width: 14 }
             ];
+
+            // 設定 A4 橫向列印
+            ws2.pageSetup = {
+                paperSize: 9,
+                orientation: 'landscape',
+                fitToPage: true,
+                fitToWidth: 1,
+                fitToHeight: 0,
+                margins: {
+                    left: 0.5, right: 0.5, top: 0.6, bottom: 0.6, header: 0.3, footer: 0.3
+                }
+            };
+
+            // 頁首頁尾
+            ws2.headerFooter = {
+                oddHeader: '&C&"Microsoft JhengHei,Bold"&14浚鍵管理有限公司 - 出勤明細',
+                oddFooter: '&L列印日期：&D &T&C第 &P 頁 / 共 &N 頁&R統計範圍：' + range.start + ' 至 ' + range.end
+            };
 
             const hRow = ws2.getRow(1);
             hRow.height = 28;
@@ -1519,12 +1532,14 @@
                 cell.border = { top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
             });
 
+            // 凍結首行 + 重複標題行（每頁列印時都顯示表頭）
             ws2.views = [{ state: 'frozen', ySplit: 1 }];
+            ws2.pageSetup.printTitlesRow = '1:1';
 
             const buf = await wb.xlsx.writeBuffer();
             const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
             saveAs(blob, `豪華出勤報表_${range.start}_至_${range.end}.xlsx`);
-            showToast('💎 豪華 Excel 匯出成功', 'success');
+            showToast('💎 豪華 Excel 匯出成功（已設定 A4 列印格式）', 'success');
         } catch (err) {
             console.error(err);
             showToast('❌ 匯出失敗：' + err.message, 'error');
